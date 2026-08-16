@@ -33,6 +33,7 @@
             const outputPdfCanvas = document.getElementById('outputPdfCanvas');
             const outputPlaceholder = document.getElementById('outputPlaceholder');
             const outputPdfPages = document.getElementById('outputPdfPages');
+            const icoSuccess = document.getElementById('icoSuccess');
             const downloadBtn = document.getElementById('downloadBtn');
             const base64Box = document.getElementById('base64Box');
             const base64Text = document.getElementById('base64Text');
@@ -52,6 +53,34 @@
 
             const modeTabs = document.querySelectorAll('.tab-btn');
             const popularGrid = document.getElementById('popularGrid');
+            const anyBadge = document.getElementById('anyBadge');
+            const fromFormat = document.getElementById('fromFormat');
+            const toFormat = document.getElementById('toFormat');
+
+            // ─── Dark Mode ───
+            const darkToggle = document.getElementById('darkToggle');
+            const darkIcon = document.getElementById('darkIcon');
+
+            function toggleDarkMode() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (isDark) {
+                    document.documentElement.removeAttribute('data-theme');
+                    darkIcon.className = 'fas fa-moon';
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    darkIcon.className = 'fas fa-sun';
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                darkIcon.className = 'fas fa-sun';
+            }
+
+            darkToggle.addEventListener('click', toggleDarkMode);
 
             // ─── State ───
             let currentFile = null;
@@ -68,26 +97,26 @@
             // ─── Format config ───
             const FORMATS = {
                 convert: [
-                    { id: 'png', label: 'PNG', icon: 'fa-image', mime: 'image/png', ext: 'png' },
-                    { id: 'jpg', label: 'JPG', icon: 'fa-image', mime: 'image/jpeg', ext: 'jpg' },
-                    { id: 'webp', label: 'WEBP', icon: 'fa-image', mime: 'image/webp', ext: 'webp' },
-                    { id: 'bmp', label: 'BMP', icon: 'fa-image', mime: 'image/bmp', ext: 'bmp' },
-                    { id: 'svg', label: 'SVG', icon: 'fa-code', mime: 'image/svg+xml', ext: 'svg' },
-                    { id: 'ico', label: 'ICO', icon: 'fa-window-maximize', mime: 'image/x-icon', ext: 'ico' },
-                    { id: 'base64', label: 'Base64', icon: 'fa-code', mime: 'text/plain', ext: 'txt' },
-                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf', mime: 'application/pdf', ext: 'pdf' },
+                    { id: 'png', label: 'PNG', icon: 'fa-image' },
+                    { id: 'jpg', label: 'JPG', icon: 'fa-image' },
+                    { id: 'webp', label: 'WEBP', icon: 'fa-image' },
+                    { id: 'bmp', label: 'BMP', icon: 'fa-image' },
+                    { id: 'svg', label: 'SVG', icon: 'fa-code' },
+                    { id: 'ico', label: 'ICO', icon: 'fa-window-maximize' },
+                    { id: 'base64', label: 'Base64', icon: 'fa-code' },
+                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf' },
                 ],
                 batch: [
-                    { id: 'png', label: 'PNG', icon: 'fa-image', mime: 'image/png', ext: 'png' },
-                    { id: 'jpg', label: 'JPG', icon: 'fa-image', mime: 'image/jpeg', ext: 'jpg' },
-                    { id: 'webp', label: 'WEBP', icon: 'fa-image', mime: 'image/webp', ext: 'webp' },
-                    { id: 'bmp', label: 'BMP', icon: 'fa-image', mime: 'image/bmp', ext: 'bmp' },
-                    { id: 'svg', label: 'SVG', icon: 'fa-code', mime: 'image/svg+xml', ext: 'svg' },
-                    { id: 'ico', label: 'ICO', icon: 'fa-window-maximize', mime: 'image/x-icon', ext: 'ico' },
-                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf', mime: 'application/pdf', ext: 'pdf' },
+                    { id: 'png', label: 'PNG', icon: 'fa-image' },
+                    { id: 'jpg', label: 'JPG', icon: 'fa-image' },
+                    { id: 'webp', label: 'WEBP', icon: 'fa-image' },
+                    { id: 'bmp', label: 'BMP', icon: 'fa-image' },
+                    { id: 'svg', label: 'SVG', icon: 'fa-code' },
+                    { id: 'ico', label: 'ICO', icon: 'fa-window-maximize' },
+                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf' },
                 ],
                 merge: [
-                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf', mime: 'application/pdf', ext: 'pdf' },
+                    { id: 'pdf', label: 'PDF', icon: 'fa-file-pdf' },
                 ]
             };
 
@@ -124,6 +153,8 @@
                 const firstId = formats[0]?.id || 'png';
                 selectedFormat = firstId;
 
+                toFormat.textContent = selectedFormat.toUpperCase();
+
                 formats.forEach(f => {
                     const pill = document.createElement('div');
                     pill.className = 'format-pill' + (f.id === selectedFormat ? ' active' : '');
@@ -134,6 +165,7 @@
                         document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('active'));
                         pill.classList.add('active');
                         selectedFormat = f.id;
+                        toFormat.textContent = selectedFormat.toUpperCase();
                         updateQualityVisibility();
                         outputArea.classList.remove('visible');
                         base64Box.classList.remove('visible');
@@ -159,20 +191,20 @@
                 const map = {
                     convert: {
                         icon: 'fa-cloud-upload-alt',
-                        title: 'Drop your file here',
-                        desc: 'or click to browse · PNG, JPG, WEBP, BMP, SVG, ICO, PDF',
+                        title: 'Select your file to convert',
+                        desc: 'or drop your file here · PNG, JPG, WEBP, BMP, SVG, ICO, PDF',
                         hint: 'Supports images, PDFs, and text files'
                     },
                     batch: {
                         icon: 'fa-layer-group',
-                        title: 'Drop multiple files here',
-                        desc: 'or click to browse · any supported files',
+                        title: 'Select multiple files to convert',
+                        desc: 'or drop your files here · any supported files',
                         hint: 'Upload multiple files to convert them all at once'
                     },
                     merge: {
                         icon: 'fa-object-ungroup',
-                        title: 'Drop PDFs here to merge',
-                        desc: 'or click to browse · PDF files only',
+                        title: 'Select PDFs to merge',
+                        desc: 'or drop your PDFs here · PDF files only',
                         hint: 'Add PDFs to merge into a single file'
                     }
                 };
@@ -182,7 +214,20 @@
                 dzDesc.textContent = data.desc;
                 dzHint.innerHTML = '<i class="fas fa-info-circle"></i> ' + data.hint;
 
-                // ─── Set accept attribute based on mode ───
+                if (mode === 'convert') {
+                    fromFormat.textContent = 'ANY';
+                    toFormat.textContent = selectedFormat.toUpperCase();
+                    anyBadge.style.display = 'flex';
+                } else if (mode === 'batch') {
+                    fromFormat.textContent = 'ANY';
+                    toFormat.textContent = selectedFormat.toUpperCase();
+                    anyBadge.style.display = 'flex';
+                } else {
+                    fromFormat.textContent = 'PDF';
+                    toFormat.textContent = 'PDF';
+                    anyBadge.style.display = 'flex';
+                }
+
                 if (mode === 'merge') {
                     fileInput.accept = 'application/pdf';
                     fileInput.multiple = true;
@@ -190,7 +235,6 @@
                     fileInput.accept = 'image/*,application/pdf';
                     fileInput.multiple = false;
                 } else {
-                    // batch mode - all files
                     fileInput.accept = '*/*';
                     fileInput.multiple = true;
                 }
@@ -212,7 +256,6 @@
                     updateMergeUI();
                 }
 
-                // ─── Clear output when switching away from convert ───
                 if (mode !== 'convert') {
                     previewRow.style.display = 'none';
                     outputArea.classList.remove('visible');
@@ -221,7 +264,6 @@
                     convertedDataURL = null;
                     convertBtn.disabled = true;
                 } else {
-                    // If switching back to convert and we have a file, show preview
                     if (currentFile) {
                         previewRow.style.display = 'flex';
                         if (imageData) {
@@ -239,7 +281,6 @@
                             infoDims.textContent = `PDF · ${pdfData.numPages} pages`;
                             fileStatus.innerHTML = '<i class="fas fa-folder-open"></i> loaded';
                             convertBtn.disabled = false;
-                            // Regenerate thumbnail
                             loadPDF(currentFile).catch(() => {});
                         }
                     }
@@ -310,8 +351,6 @@
                     return;
                 }
 
-                // Convert mode
-                // Validate file type for convert mode
                 const validTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/x-icon',
                     'image/vnd.microsoft.icon', 'application/pdf'
                 ];
@@ -451,8 +490,8 @@
                 batchFileList.innerHTML = '';
                 if (batchFiles.length === 0) {
                     batchFileList.innerHTML =
-                        `<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">
-                            <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>
+                        `<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.75rem;">
+                            <i class="fas fa-inbox" style="font-size:1.8rem;display:block;margin-bottom:0.4rem;opacity:0.2;"></i>
                             No files added yet. Drop files in the box above.
                         </div>`;
                     return;
@@ -468,7 +507,7 @@
                         <span class="bfi-size">${formatFileSize(item.file.size)}</span>
                         <span class="bfi-status ${item.status === 'done' ? 'done' : item.status === 'error' ? 'error' : item.status === 'converting' ? 'converting' : ''}">${item.status}</span>
                         ${item.status === 'done' ? `<button class="bfi-download" data-idx="${idx}"><i class="fas fa-download"></i></button>` : ''}
-                        <button class="bfi-download" data-idx="${idx}" style="color:#f87171;" title="Remove"><i class="fas fa-times"></i></button>
+                        <button class="bfi-download" data-idx="${idx}" style="color:#ef4444;" title="Remove"><i class="fas fa-times"></i></button>
                     `;
                     const dlBtn = div.querySelector('.bfi-download:not([style*="color"])');
                     if (dlBtn) {
@@ -594,8 +633,8 @@
                 mergeFileList.innerHTML = '';
                 if (mergeFiles.length === 0) {
                     mergeFileList.innerHTML =
-                        `<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">
-                            <i class="fas fa-file-pdf" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>
+                        `<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.75rem;">
+                            <i class="fas fa-file-pdf" style="font-size:1.8rem;display:block;margin-bottom:0.4rem;opacity:0.2;"></i>
                             No PDFs added yet. Drop PDFs in the box above.
                         </div>`;
                     return;
@@ -915,7 +954,7 @@
                 }
                 if (format === 'ico') {
                     const blob = encodeICO(canvas);
-                    return { type: 'image', data: null, blob, ext: 'ico' };
+                    return { type: 'ico', data: null, blob, ext: 'ico' };
                 }
                 const mime = getMimeType(format);
                 return new Promise((resolve, reject) => {
@@ -1042,10 +1081,28 @@
                 outputImage.style.display = 'none';
                 outputPdfCanvas.style.display = 'none';
                 outputPlaceholder.style.display = 'none';
+                icoSuccess.style.display = 'none';
                 outputPdfPages.textContent = '';
 
                 const isBase64 = (format === 'base64' || result.type === 'base64');
                 const isPDF = (format === 'pdf' || result.type === 'pdf');
+
+                // ─── ICO FORMAT: Show only success message ───
+                if (format === 'ico' || result.type === 'ico') {
+                    // Hide all previews
+                    outputImage.style.display = 'none';
+                    outputPdfCanvas.style.display = 'none';
+                    outputPlaceholder.style.display = 'none';
+                    // Show success message
+                    icoSuccess.style.display = 'block';
+                    convertedBlob = result.blob;
+                    convertedDataURL = null;
+                    outputLabel.textContent = 'ICO';
+                    downloadBtn.disabled = false;
+                    downloadBtn.dataset.ext = result.ext || 'ico';
+                    downloadBtn.dataset.format = 'ico';
+                    return;
+                }
 
                 if (isBase64) {
                     base64Text.value = result.data;
@@ -1070,6 +1127,7 @@
                         outputLabel.textContent = 'PDF';
                     }
                 } else {
+                    // For other image formats (PNG, JPG, WEBP, BMP, SVG)
                     const url = URL.createObjectURL(result.blob);
                     outputImage.src = url;
                     outputImage.style.display = 'block';
@@ -1189,7 +1247,6 @@
             });
 
             // ─── INIT ───
-            // Wait for DOM to be fully ready before initializing
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
@@ -1198,9 +1255,7 @@
 
             function init() {
                 renderPopularFormats();
-                // Ensure initial mode is 'convert' and render pills
                 setMode('convert');
-                // Also render pills explicitly in case setMode didn't (it should)
                 renderPills('convert');
                 console.log('🔄 Converter Pro ready!');
             }
